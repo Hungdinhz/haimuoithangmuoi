@@ -89,8 +89,15 @@ export default function createGifts(app) {
     coupon.classList.add("hidden");
     current = null;
     busy = false;
-    $$(".gift", gifts).forEach((g) => g.classList.remove("opened"));
+    $$(".gift", gifts).forEach((g) => {
+      g.classList.remove("opened");
+      g.style.animation = "none";
+      void g.offsetHeight;
+      g.style.animation = "";
+    });
     syncUI();
+    const r = gifts.getBoundingClientRect();
+    if (r.width > 0) fx.burst(r.left + r.width / 2, r.top + 80, 35);
     toast("✨ Đã chuẩn bị 6 hộp quà mới tinh! Bạn tha hồ bốc lại nhé 🎁");
   }
 

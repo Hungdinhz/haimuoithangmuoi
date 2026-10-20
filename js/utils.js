@@ -144,6 +144,9 @@ export const viewer = {
     try {
       localStorage.removeItem("kvcn-gifts-v4");
       localStorage.removeItem("kvcn-selected-gifts-v4");
+      localStorage.removeItem("kvcn-gifts-v3");
+      localStorage.removeItem("kvcn-gifts-v2");
+      localStorage.removeItem("kvcn-gifts");
     } catch {}
   },
 };

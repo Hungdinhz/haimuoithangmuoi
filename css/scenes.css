@@ -210,23 +210,33 @@ input, textarea {
 .gifts-counter-row {
   display: inline-flex; align-items: center; justify-content: center;
   gap: 10px; margin-top: 4px; flex-wrap: wrap;
+  pointer-events: auto;
 }
 .btn-reset-gifts {
-  background: rgba(255, 255, 255, .88);
-  border: 1px solid rgba(255, 111, 145, .45);
+  pointer-events: auto !important;
+  position: relative;
+  z-index: 10;
+  background: rgba(255, 255, 255, .95);
+  border: 1.5px solid rgba(255, 111, 145, .55);
   color: #a31645;
-  font-size: .8rem;
-  font-weight: 600;
-  padding: .35em .8em;
+  font-size: .82rem;
+  font-weight: 700;
+  padding: .35em .9em;
   border-radius: 999px;
   cursor: pointer;
   transition: all .2s;
-  box-shadow: 0 2px 6px rgba(120, 40, 80, .08);
+  box-shadow: 0 2px 8px rgba(120, 40, 80, .12);
+  user-select: none;
 }
 .btn-reset-gifts:hover {
   background: #fff;
-  border-color: #ff6f91;
-  transform: translateY(-1px);
+  border-color: #ff4081;
+  color: #c2185b;
+  transform: translateY(-1px) scale(1.03);
+  box-shadow: 0 4px 12px rgba(120, 40, 80, .18);
+}
+.btn-reset-gifts:active {
+  transform: translateY(1px) scale(0.97);
 }
 .gifts {
   display: grid;
