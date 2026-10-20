@@ -1,0 +1,179 @@
+/* ==========================================================
+   Khu Vườn Của Nàng – base styles
+   ========================================================== */
+:root {
+  --night: #1a1033;
+  --night-2: #2b1650;
+  --peach: #ffb4c6;
+  --rose: #ff6f91;
+  --cream: #fff5ec;
+  --gold: #f7c873;
+  --ink: #3a2240;
+  --glass: rgba(255, 255, 255, 0.14);
+  --glass-border: rgba(255, 255, 255, 0.28);
+  --font-script: "Dancing Script", cursive;
+  --font-body: "Be Vietnam Pro", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --ease: cubic-bezier(.22, .9, .3, 1);
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  height: 100%;
+  overflow: hidden;
+  font-family: var(--font-body);
+  color: #fff;
+  background: var(--night);
+  -webkit-tap-highlight-color: transparent;
+  -webkit-font-smoothing: antialiased;
+}
+
+button { font: inherit; color: inherit; cursor: pointer; }
+input, textarea { font: inherit; }
+.hidden { display: none !important; }
+
+/* ---------- Sky (night -> dawn) ---------- */
+.sky {
+  position: fixed; inset: 0; z-index: 0;
+  background:
+    radial-gradient(ellipse at 50% 120%, #5b2a7a 0%, transparent 60%),
+    linear-gradient(180deg, #0d0820 0%, var(--night) 45%, var(--night-2) 100%);
+  transition: opacity 2.5s ease;
+}
+.sky::after {
+  content: ""; position: absolute; inset: 0; opacity: 0;
+  background:
+    radial-gradient(ellipse at 50% 110%, #ffe1c4 0%, transparent 55%),
+    linear-gradient(180deg, #ffd6e0 0%, #ffb4c6 40%, #ffcfb3 75%, #fff0dc 100%);
+  transition: opacity 3s ease;
+}
+body.dawn .sky::after { opacity: 1; }
+body.dawn { color: var(--ink); }
+
+.fx-layer {
+  position: fixed; inset: 0; z-index: 50;
+  width: 100%; height: 100%;
+  pointer-events: none;
+}
+
+/* ---------- Scenes ---------- */
+#stage { position: fixed; inset: 0; z-index: 10; }
+.scene {
+  position: absolute; inset: 0;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  padding: max(24px, env(safe-area-inset-top)) 20px max(24px, env(safe-area-inset-bottom));
+  opacity: 0; visibility: hidden;
+  transform: scale(1.03);
+  transition: opacity .9s var(--ease), transform .9s var(--ease), visibility 0s .9s;
+  text-align: center;
+}
+.scene.active {
+  opacity: 1; visibility: visible; transform: none;
+  transition: opacity .9s var(--ease), transform .9s var(--ease), visibility 0s;
+}
+.scene.scroll { justify-content: flex-start; overflow-y: auto; -webkit-overflow-scrolling: touch; }
+.full-canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+
+/* ---------- Typography ---------- */
+h1, h2 { margin: 0; font-weight: 700; letter-spacing: -.01em; }
+h1 { font-size: clamp(2.2rem, 8vw, 4.5rem); line-height: 1.05; }
+h2 { font-size: clamp(1.5rem, 5vw, 2.3rem); }
+.script { font-family: var(--font-script); font-weight: 700; }
+.script.big { font-size: clamp(1.8rem, 6vw, 2.8rem); margin: 0 0 .3em; }
+.script.huge { font-size: clamp(2.4rem, 9vw, 4.2rem); margin: .4em 0; }
+
+/* ---------- Buttons ---------- */
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: .4em;
+  border: 0; border-radius: 999px;
+  padding: .85em 1.6em;
+  font-weight: 600; font-size: 1rem;
+  text-decoration: none;
+  transition: transform .2s var(--ease), box-shadow .2s, background .2s;
+}
+.btn:active { transform: scale(.96); }
+.btn.primary {
+  background: linear-gradient(135deg, #ff8fab, var(--rose));
+  color: #fff;
+  box-shadow: 0 8px 24px rgba(255, 111, 145, .45);
+}
+.btn.primary:hover { box-shadow: 0 10px 32px rgba(255, 111, 145, .65); transform: translateY(-2px); }
+.btn.ghost {
+  background: var(--glass);
+  border: 1px solid var(--glass-border);
+  color: inherit;
+  backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+}
+.btn.small { padding: .5em 1em; font-size: .9rem; }
+.btn.link { background: none; text-decoration: underline; opacity: .8; }
+.btn:focus-visible, .hud-btn:focus-visible, input:focus-visible, textarea:focus-visible {
+  outline: 3px solid var(--gold); outline-offset: 3px;
+}
+
+.glass {
+  background: rgba(255, 255, 255, .55);
+  border: 1px solid rgba(255, 255, 255, .7);
+  backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+  border-radius: 24px;
+  box-shadow: 0 20px 60px rgba(90, 30, 80, .18);
+  color: var(--ink);
+}
+.card { padding: 28px 24px; width: min(440px, 100%); }
+
+/* ---------- HUD ---------- */
+.hud {
+  position: fixed; z-index: 60;
+  top: max(14px, env(safe-area-inset-top)); right: 14px;
+  display: flex; gap: 8px;
+  opacity: 0; pointer-events: none; transition: opacity .6s;
+}
+.hud.show { opacity: 1; pointer-events: auto; }
+.hud-btn {
+  position: relative;
+  width: 44px; height: 44px; border-radius: 50%;
+  border: 1px solid var(--glass-border);
+  background: rgba(255, 255, 255, .2);
+  backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+  font-size: 1.2rem;
+  transition: transform .2s;
+}
+.hud-badge {
+  position: absolute; top: -4px; right: -4px;
+  min-width: 19px; height: 19px; padding: 0 5px;
+  border-radius: 999px;
+  background: #e91e63; color: #fff;
+  font-size: .7rem; font-weight: 700;
+  display: grid; place-items: center;
+  box-shadow: 0 2px 6px rgba(0,0,0,.25);
+}
+.hud-btn:hover { transform: scale(1.08); }
+.hud-btn.off { opacity: .45; }
+
+.progress {
+  position: fixed; z-index: 60; left: 50%; transform: translateX(-50%);
+  bottom: max(10px, env(safe-area-inset-bottom));
+  display: flex; gap: 6px;
+  opacity: 0; transition: opacity .6s;
+}
+.progress.show { opacity: 1; }
+.progress i {
+  width: 7px; height: 7px; border-radius: 50%;
+  background: currentColor; opacity: .3; transition: all .4s;
+}
+.progress i.on { opacity: 1; width: 20px; border-radius: 4px; }
+
+/* ---------- Toast ---------- */
+.toast {
+  position: fixed; z-index: 80; left: 50%; bottom: 60px;
+  transform: translate(-50%, 20px); opacity: 0;
+  background: rgba(30, 15, 45, .85); color: #fff;
+  padding: .7em 1.2em; border-radius: 999px; font-size: .95rem;
+  transition: all .35s var(--ease);
+  pointer-events: none;
+}
+.toast.show { opacity: 1; transform: translate(-50%, 0); }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .2s !important; }
+}

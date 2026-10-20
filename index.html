@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Khu Vườn Của Nàng – Chúc mừng 20/10 🌸</title>
+  <meta name="description" content="Một khu vườn nhỏ dành tặng những người phụ nữ tuyệt vời nhân ngày Phụ nữ Việt Nam 20/10." />
+  <meta name="theme-color" content="#1a1033" />
+
+  <!-- Open Graph: preview đẹp khi chia sẻ qua Zalo / Facebook / Messenger -->
+  <meta property="og:type" content="website" />
+  <meta property="og:title" content="🌸 Có một khu vườn đang chờ bạn…" />
+  <meta property="og:description" content="Chạm để gieo một hạt giống – món quà nhỏ nhân ngày Phụ nữ Việt Nam 20/10." />
+  <meta property="og:image" content="assets/og-image.jpg" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+
+  <link rel="icon" href="assets/favicon.svg" type="image/svg+xml" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;600;700&family=Dancing+Script:wght@500;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/base.css" />
+  <link rel="stylesheet" href="css/scenes.css" />
+</head>
+<body>
+  <!-- Lớp nền: trời đêm -> bình minh -->
+  <div id="sky" class="sky"></div>
+  <!-- Lớp hiệu ứng hạt dùng chung (đom đóm, cánh hoa, tim...) -->
+  <canvas id="fx" class="fx-layer" aria-hidden="true"></canvas>
+
+  <!-- Thanh điều khiển nổi -->
+  <div class="hud" id="hud">
+    <button class="hud-btn" id="btn-music" aria-label="Bật/tắt nhạc" title="Nhạc nền">🎵</button>
+    <button class="hud-btn hidden" id="btn-inbox" aria-label="Hộp thư của HungDinh" title="Hộp thư của HungDinh">
+      📬<span class="hud-badge hidden" id="inbox-badge">0</span>
+    </button>
+    <button class="hud-btn" id="btn-create" aria-label="Tạo thiệp" title="Tạo thiệp cho người phụ nữ của bạn">💌</button>
+  </div>
+  <div class="progress" id="progress" aria-hidden="true"></div>
+
+  <main id="stage">
+    <!-- 0 + 1. MỞ ĐẦU & GIEO HẠT -->
+    <section class="scene" id="scene-intro" data-title="Mở đầu">
+      <canvas id="seed-canvas" class="full-canvas"></canvas>
+      <div class="intro-text" id="intro-text" aria-live="polite"></div>
+      <button class="tap-hint hidden" id="btn-seed">✨ Chạm để gieo một hạt giống</button>
+      <div class="bloom-title hidden" id="bloom-title">
+        <p class="script big">Chúc mừng ngày</p>
+        <h1>Phụ nữ Việt Nam</h1>
+        <p class="date">20 · 10</p>
+        <button class="btn primary" data-next>Mở khu vườn →</button>
+      </div>
+    </section>
+
+    <!-- 2. THIỆP RIÊNG / HỎI TÊN -->
+    <section class="scene" id="scene-letter" data-title="Lá thư">
+      <!-- 2a. Phong bì (khi có link thiệp riêng) -->
+      <div class="letter-wrap hidden" id="letter-personal">
+        <div class="envelope" id="envelope" role="button" tabindex="0" aria-label="Mở thư">
+          <div class="env-back"></div>
+          <div class="paper" id="paper">
+            <p class="script to">Gửi <span id="l-to"></span>,</p>
+            <p class="msg" id="l-msg"></p>
+            <p class="script from">— <span id="l-from"></span> —</p>
+          </div>
+          <div class="env-front"></div>
+          <div class="env-flap"></div>
+          <div class="env-seal">💗</div>
+        </div>
+        <p class="hint" id="env-hint">Chạm vào phong thư để mở</p>
+        <button class="btn primary hidden" id="btn-letter-next" data-next>Đi dạo khu vườn →</button>
+      </div>
+
+      <!-- 2b. Hỏi tên (khi mở trang bình thường) -->
+      <div class="card glass hidden" id="letter-ask">
+        <p class="script big">Xin chào ✿</p>
+        <p>Mình nên gọi bạn là gì nhỉ?</p>
+        <form id="name-form" autocomplete="off">
+          <input id="name-input" maxlength="30" placeholder="Tên của bạn (không bắt buộc)" />
+          <button class="btn primary" type="submit">Tiếp tục →</button>
+        </form>
+      </div>
+    </section>
+
+    <!-- 3. KHU VƯỜN LỜI CHÚC -->
+    <section class="scene" id="scene-garden" data-title="Khu vườn">
+      <canvas id="garden-canvas" class="full-canvas"></canvas>
+      <div class="scene-head">
+        <h2>Khu vườn lời chúc</h2>
+        <p>Chạm vào bất cứ đâu để trồng hoa cho <b class="viewer-name">bạn</b> 🌷</p>
+        <div class="counter"><span id="garden-count">0</span>/20 bông</div>
+      </div>
+      <div class="wish-toast" id="wish-toast" aria-live="polite"></div>
+      <div class="secret glass hidden" id="garden-secret">
+        <p class="script big">20 bông hoa cho ngày 20</p>
+        <p>…và cả một khu vườn cho <b class="viewer-name">bạn</b>. Cảm ơn vì bạn đã luôn nở hoa, kể cả trong những ngày giông bão. 💐</p>
+      </div>
+      <button class="btn primary next-corner" data-next>Tiếp →</button>
+    </section>
+
+    <!-- 4. GIEO QUẺ -->
+    <section class="scene" id="scene-fortune" data-title="Gieo quẻ">
+      <div class="scene-head">
+        <h2>Gieo quẻ 20/10</h2>
+        <p>Thành tâm khấn một điều ước, rồi <span class="only-motion">lắc điện thoại hoặc </span>chạm vào ống xăm 🎋</p>
+      </div>
+      <div class="fortune-box">
+        <div class="tube" id="tube" role="button" tabindex="0" aria-label="Lắc ống xăm">
+          <div class="sticks">
+            <i></i><i></i><i></i><i></i><i></i><i></i><i></i>
+          </div>
+          <div class="tube-body"><span>福</span></div>
+          <div class="stick-out" id="stick-out"></div>
+        </div>
+        <div class="fortune-card hidden" id="fortune-card">
+          <div class="f-rank" id="f-rank"></div>
+          <div class="f-title" id="f-title"></div>
+          <p class="f-text" id="f-text"></p>
+          <button class="btn ghost" id="btn-refortune">Gieo lại</button>
+        </div>
+      </div>
+      <button class="btn primary next-corner" data-next>Tiếp →</button>
+    </section>
+
+    <!-- 5. HỘP QUÀ BÍ ẨN -->
+    <section class="scene" id="scene-gifts" data-title="Hộp quà">
+      <div class="scene-head">
+        <h2>Hộp quà bí ẩn</h2>
+        <p>Có 3 hộp quà dành tặng bạn, mỗi hộp chỉ mở được 1 lần (tối đa 3 hộp) 🎁</p>
+        <div class="counter">Đã mở: <span id="gift-count">0</span>/3 hộp</div>
+      </div>
+      <div class="gifts" id="gifts">
+        <button class="gift g1" data-gift="0" aria-label="Hộp quà 1"><span class="lid"></span><span class="box"></span></button>
+        <button class="gift g2" data-gift="1" aria-label="Hộp quà 2"><span class="lid"></span><span class="box"></span></button>
+        <button class="gift g3" data-gift="2" aria-label="Hộp quà 3"><span class="lid"></span><span class="box"></span></button>
+      </div>
+      <div class="coupon hidden" id="coupon">
+        <div class="coupon-inner">
+          <div class="c-label">PHIẾU ĐẶC QUYỀN 20/10</div>
+          <div class="c-icon" id="c-icon"></div>
+          <div class="c-title" id="c-title"></div>
+          <div class="c-desc" id="c-desc"></div>
+          <div class="c-owner">Người sở hữu: <b class="viewer-name">bạn</b></div>
+        </div>
+        <div class="coupon-actions">
+          <button class="btn primary" id="btn-download">⬇ Tải phiếu về</button>
+          <button class="btn ghost" id="btn-regift">Mở hộp khác</button>
+        </div>
+      </div>
+      <button class="btn primary next-corner" data-next>Tiếp →</button>
+    </section>
+
+    <!-- 6. DÒNG THỜI GIAN -->
+    <section class="scene scroll" id="scene-timeline" data-title="Dòng thời gian">
+      <div class="timeline-wrap">
+        <div class="scene-head static">
+          <h2>Những người phụ nữ làm nên lịch sử</h2>
+          <p>Mỗi thời đại đều có những bông hoa kiên cường. Cuộn xuống nhé ↓</p>
+        </div>
+        <ol class="timeline" id="timeline"></ol>
+        <div class="timeline-end">
+          <button class="btn primary" data-next>Còn một điều cuối cùng… →</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- 7. KẾT -->
+    <section class="scene scroll" id="scene-finale" data-title="Lời cảm ơn">
+      <div class="finale-wrap">
+        <div class="finale-text" id="finale-text">
+          <p class="script big">Cảm ơn <span class="viewer-name">bạn</span>,</p>
+          <p>vì đã là con gái, là phụ nữ,</p>
+          <p>vì những nụ cười làm thế giới dịu dàng hơn,</p>
+          <p>và vì sự mạnh mẽ mà đôi khi chính bạn cũng không nhận ra.</p>
+          <p class="script huge">Chúc mừng 20/10 💐</p>
+        </div>
+
+        <!-- Lời chúc thêm dành riêng cho bạn nữ -->
+        <div class="card glass finale-wish-card" id="finale-wish-card">
+          <div class="fw-badge">✨ LỜI CHÚC RIÊNG DÀNH TẶNG <span class="viewer-name">BẠN</span></div>
+          <p class="fw-content" id="fw-content"></p>
+          <div class="fw-footer">
+            <span class="script fw-sign">— Gửi từ HungDinh 💗 —</span>
+            <button type="button" class="btn ghost small" id="btn-next-wish">🔄 Lời chúc khác</button>
+          </div>
+        </div>
+
+        <!-- Nhắn gửi tới HungDinh -->
+        <div class="card glass request-card" id="request-card">
+          <p class="req-sub">
+            <b class="viewer-name">Bạn</b> có muốn đổi quà vừa mở được hay nhắn gửi điều gì tới <b>HungDinh</b> không? Gửi ngay bên dưới để HungDinh biết nhé!
+          </p>
+          <form id="request-form" autocomplete="off">
+            <div class="req-sender-row">
+              <span>👤 Tên bạn dùng:</span>
+              <input id="req-name" maxlength="30" required placeholder="Nhập tên của bạn…" />
+            </div>
+            <div class="req-perks hidden" id="req-perks"></div>
+            <div class="req-chips" id="req-chips"></div>
+            <textarea id="req-msg" maxlength="300" rows="3" required placeholder="Nhập điều ước hoặc lời nhắn gửi tới HungDinh…"></textarea>
+            <button class="btn primary" type="submit" id="btn-send-req">🚀 Gửi cho HungDinh</button>
+          </form>
+          <div class="req-sent hidden" id="req-sent">
+            <div class="req-sent-icon">🎉</div>
+            <p><b>Đã gửi tới HungDinh thành công!</b></p>
+            <p class="req-sent-detail" id="req-sent-detail"></p>
+            <button type="button" class="btn ghost small" id="btn-req-again">✍️ Gửi thêm lời nhắn khác</button>
+          </div>
+        </div>
+
+        <div class="finale-actions">
+          <button class="btn primary" data-next>💌 Tạo thiệp cho người phụ nữ của bạn</button>
+          <button class="btn ghost" id="btn-replay">↺ Xem lại từ đầu</button>
+        </div>
+
+        <footer class="credit finale-credit">
+          Thực hiện bởi <b>HungDinh</b> 💗 · 20/10
+        </footer>
+      </div>
+    </section>
+
+    <!-- 8. TẠO THIỆP -->
+    <section class="scene scroll" id="scene-creator" data-title="Tạo thiệp">
+      <div class="card glass creator">
+        <h2>Tạo thiệp 20/10</h2>
+        <p class="sub">Gửi tặng mẹ, bà, chị, em, cô giáo, người thương… một khu vườn của riêng họ.</p>
+        <form id="creator-form" autocomplete="off">
+          <label>Người nhận
+            <input id="c-to" maxlength="30" required placeholder="VD: Mẹ yêu" />
+          </label>
+          <label>Người gửi
+            <input id="c-from" maxlength="30" required placeholder="VD: Con trai của mẹ" />
+          </label>
+          <label>Lời chúc
+            <span class="row">
+              <textarea id="c-msg" maxlength="300" rows="4" required placeholder="Viết vài dòng từ trái tim…"></textarea>
+            </span>
+            <button type="button" class="btn ghost small" id="btn-suggest">🎲 Gợi ý lời chúc</button>
+          </label>
+          <button class="btn primary" type="submit">✨ Tạo link thiệp</button>
+        </form>
+        <div class="result hidden" id="creator-result">
+          <div class="qr" id="qr"></div>
+          <input id="share-link" readonly />
+          <div class="result-actions">
+            <button class="btn primary" id="btn-copy">📋 Copy link</button>
+            <button class="btn ghost" id="btn-share">📤 Chia sẻ</button>
+            <a class="btn ghost" id="btn-preview" target="_blank" rel="noopener">👀 Xem thử</a>
+            <button class="btn ghost" id="btn-qr-dl">⬇ Tải mã QR</button>
+          </div>
+        </div>
+        <button class="btn link" id="btn-back-home">← Về khu vườn</button>
+      </div>
+      <footer class="credit">Làm bằng 💗 bởi <b>HungDinh</b> tặng những người phụ nữ tuyệt vời · 20/10</footer>
+    </section>
+  </main>
+
+  <!-- Modal Hộp thư bí mật của HungDinh (chỉ hiện khi có key=hungdinh) -->
+  <div class="inbox-backdrop hidden" id="inbox-modal" role="dialog" aria-modal="true" aria-labelledby="inbox-title">
+    <div class="card glass inbox-dialog">
+      <div class="inbox-head">
+        <div>
+          <h3 id="inbox-title">📬 Hộp thư riêng của HungDinh</h3>
+          <p class="inbox-sub">Chỉ mình HungDinh xem được · Kiểm tra tên, 3 hộp quà đã mở & xác thực trúng Bánh mì</p>
+        </div>
+        <div class="inbox-head-actions">
+          <button type="button" class="btn ghost small" id="btn-inbox-refresh" title="Làm mới">🔄</button>
+          <button type="button" class="btn ghost small" id="btn-inbox-close" title="Đóng">✕</button>
+        </div>
+      </div>
+      <div class="inbox-list" id="inbox-list"></div>
+    </div>
+  </div>
+
+  <audio id="bgm" src="assets/music.wav" loop preload="none"></audio>
+
+  <script src="js/vendor/qrcode.js"></script>
+  <script type="module" src="js/main.js"></script>
+</body>
+</html>
