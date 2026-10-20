@@ -89,6 +89,13 @@ export const COUPONS = [
   { icon: "💆", title: "Massage vai 15 phút", desc: "Đổi được 15 phút massage vai gáy. Áp dụng sau mỗi ngày làm việc vất vả." },
   { icon: "🙊", title: "Luôn luôn đúng", desc: "Trong 1 ngày, mọi ý kiến của bạn đều đúng. Tuyệt đối không được cãi." },
   { icon: "🥖", title: "Bánh mì (trị giá 10–20k)", desc: "Được HungDinh tặng ngay 1 chiếc bánh mì nóng hổi thơm ngon trị giá 10–20k!", isBanhMi: true },
+  { icon: "🥤", title: "Cốc nước mía mát lạnh", desc: "Đổi ngay 1 ly nước mía siêu to khổng lồ giải nhiệt ngày nắng nóng." },
+  { icon: "🍦", title: "Que kem ngọt ngào", desc: "Được khao 1 cây kem mát rượi vào một buổi chiều tan học/tan làm." },
+  { icon: "👂", title: "Người lắng nghe tâm sự", desc: "Được quyền than thở, kể lể drama trong 30 phút mà đối phương chỉ chăm chú lắng nghe." },
+  { icon: "☕", title: "Kèo trà đá hướng dương", desc: "Đổi 1 buổi ngồi trà đá vỉa hè cắn hướng dương, buôn chuyện xuyên màn đêm." },
+  { icon: "🍭", title: "Cây kẹo ngọt / Gói snack", desc: "Đổi ngay 1 món ăn vặt nhỏ xinh để nạp năng lượng chống đói những lúc tụt mood." },
+  { icon: "🛵", title: "Chuyến xe ôm thân thiện", desc: "Được miễn phí một chuyến xe ôm đưa đón một đoạn đường khi bạn lười lái xe." },
+  { icon: "✨", title: "Một lời khen chân thành", desc: "Được nhận 1 tràng khen ngợi thật lòng, công nhận sự đáng yêu và nỗ lực của bạn." },
 ];
 
 /** Dòng thời gian. Mục cuối cùng (you: true) dùng tên người xem. */
