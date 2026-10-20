@@ -120,7 +120,8 @@ document.addEventListener("click", (e) => {
 $("#btn-create").addEventListener("click", () => go("scene-creator"));
 $("#btn-back-home").addEventListener("click", () => go("scene-garden"));
 $("#btn-replay").addEventListener("click", () => {
-  location.href = location.pathname + location.search;
+  viewer.resetGiftsSession();
+  location.href = location.pathname + (location.search ? location.search.replace(/#.*$/, "") : "");
 });
 
 // ---------- Easter eggs ----------
@@ -151,5 +152,6 @@ function checkHerHour() {
 // ---------- Khởi động ----------
 fx.init($("#fx"));
 app.refreshNames();
+if (!location.hash) viewer.resetGiftsSession();
 go("scene-intro");
 const herHourTimer = setInterval(() => { if (app.current !== "scene-intro" && checkHerHour()) clearInterval(herHourTimer); }, 30000);

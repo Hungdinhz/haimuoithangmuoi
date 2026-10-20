@@ -1,5 +1,5 @@
 // Cảnh 0 + 1: chữ gõ từng dòng -> gieo hạt -> hoa nở -> bình minh.
-import { $, typeText, sleep, fitCanvas, clamp, easeOutCubic, rand } from "../utils.js";
+import { $, typeText, sleep, fitCanvas, clamp, easeOutCubic, rand, viewer } from "../utils.js";
 import { INTRO_LINES } from "../data.js";
 import { fx } from "../fx/particles.js";
 import { drawFlower, drawStem, isCupFlower, PALETTES } from "../fx/flowers.js";
@@ -102,6 +102,7 @@ export default function createIntro(app) {
   function plant() {
     if (planted || !ready) return;
     planted = true;
+    viewer.resetGiftsSession();
     app.startMusic();
     btnSeed.classList.add("hidden");
     textEl.style.transition = "opacity .8s";

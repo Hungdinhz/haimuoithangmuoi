@@ -79,8 +79,23 @@ export default function createGifts(app) {
   const coupon = $("#coupon");
   const countEl = $("#gift-count");
   const btnRegift = $("#btn-regift");
+  const btnResetGifts = $("#btn-reset-gifts");
+  const btnCouponReset = $("#btn-coupon-reset");
   let current = null;
   let busy = false;
+
+  function resetAllGifts() {
+    viewer.resetGiftsSession();
+    coupon.classList.add("hidden");
+    current = null;
+    busy = false;
+    $$(".gift", gifts).forEach((g) => g.classList.remove("opened"));
+    syncUI();
+    toast("✨ Đã chuẩn bị 6 hộp quà mới tinh! Bạn tha hồ bốc lại nhé 🎁");
+  }
+
+  if (btnResetGifts) btnResetGifts.addEventListener("click", resetAllGifts);
+  if (btnCouponReset) btnCouponReset.addEventListener("click", resetAllGifts);
 
   function syncUI() {
     const map = viewer.getOpenedMap();
@@ -93,10 +108,13 @@ export default function createGifts(app) {
       g.classList.toggle("opened", Boolean(item));
     });
 
-    const remain = Math.max(0, 2 - openedCount);
+    const remain = Math.max(0, 6 - openedCount);
     btnRegift.textContent = remain > 0
-      ? `🎁 Mở tiếp 1 hộp nữa (còn ${remain} hộp)`
-      : "Đóng (Đã mở đủ 2/6 hộp)";
+      ? `🎁 Mở tiếp các hộp còn lại (còn ${remain} hộp)`
+      : "Đóng phiếu quà";
+
+    if (btnResetGifts) btnResetGifts.classList.toggle("hidden", openedCount === 0);
+    if (btnCouponReset) btnCouponReset.classList.toggle("hidden", openedCount < 6);
   }
 
   function showCoupon(c) {
@@ -120,9 +138,9 @@ export default function createGifts(app) {
         return;
       }
 
-      // Nếu đã mở đủ 2 hộp thì không mở thêm được nữa
-      if (Object.keys(map).length >= 2) {
-        toast("Bạn đã mở đủ 2/6 hộp quà rồi nhé! 🎁");
+      // Nếu đã mở đủ 6 hộp thì báo đã mở đủ
+      if (Object.keys(map).length >= 6) {
+        toast("Bạn đã mở đủ 6/6 hộp quà rồi nhé! 🎁");
         return;
       }
 
@@ -133,9 +151,18 @@ export default function createGifts(app) {
       fx.burst(r.left + r.width / 2, r.top - 20, 40);
 
       // Chọn món quà chưa trùng với các hộp đã mở
+      const openedCount = Object.keys(map).length;
       const usedTitles = new Set(Object.values(map).map((x) => x.title));
       const pool = COUPONS.filter((x) => !usedTitles.has(x.title));
-      const c = pick(pool.length ? pool : COUPONS);
+      let c = pick(pool.length ? pool : COUPONS);
+
+      // Đảm bảo khi mở hết 6 hộp sẽ luôn có Bánh mì thơm ngon
+      const hasBanhMi = Object.values(map).some((x) => x.isBanhMi);
+      if (openedCount === 5 && !hasBanhMi) {
+        const banhMiItem = COUPONS.find((x) => x.isBanhMi);
+        if (banhMiItem) c = banhMiItem;
+      }
+
       viewer.saveOpenedGift(idx, c);
       syncUI();
 

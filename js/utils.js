@@ -105,7 +105,7 @@ export const viewer = {
 
   getOpenedMap() {
     try {
-      const raw = localStorage.getItem("kvcn-gifts-v3");
+      const raw = localStorage.getItem("kvcn-gifts-v4");
       return raw ? JSON.parse(raw) : this._memGifts;
     } catch {
       return this._memGifts;
@@ -113,10 +113,10 @@ export const viewer = {
   },
   saveOpenedGift(boxIdx, gift) {
     const map = this.getOpenedMap();
-    if (Object.keys(map).length >= 2 && !map[boxIdx]) return map[boxIdx] || null;
+    if (Object.keys(map).length >= 6 && !map[boxIdx]) return map[boxIdx] || null;
     map[boxIdx] = gift;
     this._memGifts = map;
-    try { localStorage.setItem("kvcn-gifts-v3", JSON.stringify(map)); } catch {}
+    try { localStorage.setItem("kvcn-gifts-v4", JSON.stringify(map)); } catch {}
     return gift;
   },
   openedList() {
@@ -127,6 +127,24 @@ export const viewer = {
   },
   hasBanhMi() {
     return this.openedList().some((g) => g.isBanhMi || (g.title && g.title.includes("Bánh mì")));
+  },
+  getSelectedGifts() {
+    try {
+      const raw = localStorage.getItem("kvcn-selected-gifts-v4");
+      return raw ? JSON.parse(raw) : [];
+    } catch {
+      return [];
+    }
+  },
+  saveSelectedGifts(list) {
+    try { localStorage.setItem("kvcn-selected-gifts-v4", JSON.stringify(list)); } catch {}
+  },
+  resetGiftsSession() {
+    this._memGifts = {};
+    try {
+      localStorage.removeItem("kvcn-gifts-v4");
+      localStorage.removeItem("kvcn-selected-gifts-v4");
+    } catch {}
   },
 };
 

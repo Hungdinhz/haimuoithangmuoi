@@ -6,6 +6,9 @@
   <title>Khu Vườn Của Nàng – Chúc mừng 20/10 🌸</title>
   <meta name="description" content="Một khu vườn nhỏ dành tặng những người phụ nữ tuyệt vời nhân ngày Phụ nữ Việt Nam 20/10." />
   <meta name="theme-color" content="#1a1033" />
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+  <meta http-equiv="Pragma" content="no-cache" />
+  <meta http-equiv="Expires" content="0" />
 
   <!-- Open Graph: preview đẹp khi chia sẻ qua Zalo / Facebook / Messenger -->
   <meta property="og:type" content="website" />
@@ -19,8 +22,8 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;600;700&family=Dancing+Script:wght@500;700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="css/base.css" />
-  <link rel="stylesheet" href="css/scenes.css" />
+  <link rel="stylesheet" href="css/base.css?v=6" />
+  <link rel="stylesheet" href="css/scenes.css?v=6" />
 </head>
 <body>
   <!-- Lớp nền: trời đêm -> bình minh -->
@@ -126,8 +129,11 @@
     <section class="scene" id="scene-gifts" data-title="Hộp quà">
       <div class="scene-head">
         <h2>Hộp quà bí ẩn</h2>
-        <p>Có 6 hộp quà bí ẩn dành tặng bạn, bạn được chọn mở bất kỳ 2/6 hộp nhé 🎁</p>
-        <div class="counter">Đã mở: <span id="gift-count">0</span>/2 hộp</div>
+        <p>Có 6 hộp quà bí ẩn dành tặng bạn, hãy mở cả 6 hộp để nhận quà nhé 🎁</p>
+        <div class="gifts-counter-row">
+          <div class="counter">Đã mở: <span id="gift-count">0</span>/6 hộp</div>
+          <button type="button" class="btn-reset-gifts hidden" id="btn-reset-gifts" title="Bốc lại 6 hộp mới">↺ Mở lại 6 hộp mới</button>
+        </div>
       </div>
       <div class="gifts" id="gifts">
         <button class="gift g1" data-gift="0" aria-label="Hộp quà 1"><span class="lid"></span><span class="box"></span></button>
@@ -147,7 +153,8 @@
         </div>
         <div class="coupon-actions">
           <button class="btn primary" id="btn-download">⬇ Tải phiếu về</button>
-          <button class="btn ghost" id="btn-regift">Mở hộp khác</button>
+          <button class="btn ghost" id="btn-regift">Mở tiếp</button>
+          <button class="btn ghost hidden" id="btn-coupon-reset"></button>
         </div>
       </div>
       <button class="btn primary next-corner" data-next>Tiếp →</button>
@@ -200,12 +207,15 @@
             </div>
             <div class="req-gift-toggle-wrap" id="req-gift-toggle-wrap">
               <button type="button" class="btn-toggle-gifts" id="btn-toggle-gifts">
-                🎁 Đổi phiếu quà đã mở... ▼
+                🎁 Chọn quà đổi (chọn tối đa 3 trong 6 món) ▼
               </button>
               <div class="req-gift-dropdown hidden" id="req-gift-dropdown"></div>
             </div>
             <div class="req-chips" id="req-chips"></div>
-            <textarea id="req-msg" maxlength="300" rows="3" required placeholder="Nhập điều ước hoặc lời nhắn gửi tới HungDinh…"></textarea>
+            <div class="req-msg-wrap">
+              <textarea id="req-msg" maxlength="500" rows="4" required placeholder="Nhập điều ước hoặc lời nhắn gửi tới HungDinh (tối đa 500 ký tự)…"></textarea>
+              <div class="req-char-counter"><span id="req-char-count">0</span>/500</div>
+            </div>
             <button class="btn primary" type="submit" id="btn-send-req">🚀 Gửi cho HungDinh</button>
           </form>
           <div class="req-sent hidden" id="req-sent">
@@ -283,6 +293,6 @@
   <audio id="bgm" src="assets/music.wav" loop preload="none"></audio>
 
   <script src="js/vendor/qrcode.js"></script>
-  <script type="module" src="js/main.js"></script>
+  <script type="module" src="js/main.js?v=6"></script>
 </body>
 </html>

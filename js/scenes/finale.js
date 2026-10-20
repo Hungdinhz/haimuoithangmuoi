@@ -50,10 +50,16 @@ export default function createFinale(app) {
   const reqGiftDropdown = $("#req-gift-dropdown");
   const reqChips = $("#req-chips");
   const reqMsg = $("#req-msg");
+  const reqCharCount = $("#req-char-count");
   const btnSendReq = $("#btn-send-req");
   const reqSent = $("#req-sent");
   const reqSentDetail = $("#req-sent-detail");
   const btnReqAgain = $("#btn-req-again");
+
+  function updateCharCount() {
+    if (reqCharCount) reqCharCount.textContent = String(reqMsg.value.length);
+  }
+  reqMsg.addEventListener("input", updateCharCount);
 
   const btnInbox = $("#btn-inbox");
   const inboxModal = $("#inbox-modal");
@@ -88,10 +94,15 @@ export default function createFinale(app) {
     fx.puff(r.left + r.width / 2, r.top, 12);
   });
 
-  // ---------- 2. Dòng chọn đổi phiếu quà đã mở (chỉ hiện chi tiết khi bấm vào) ----------
+  // ---------- 2. Dòng chọn đổi phiếu quà đã mở (chọn tối đa 3 trong 6 món quà) ----------
   function renderGiftSelector() {
     const opened = viewer.openedList();
     const wonBanhMi = viewer.hasBanhMi();
+    let selected = viewer.getSelectedGifts();
+    // Lọc lại chỉ giữ các món thực sự nằm trong danh sách đã mở
+    selected = selected.filter((s) => opened.some((o) => o.title === s.title));
+    viewer.saveSelectedGifts(selected);
+
     reqGiftDropdown.replaceChildren();
 
     if (!opened.length && !viewer.fortune) {
@@ -101,44 +112,106 @@ export default function createFinale(app) {
       emptyNote.style.opacity = ".8";
       emptyNote.textContent = "Bạn chưa mở hộp quà nào ở cảnh trước. Bạn có thể tự viết lời nhắn / điều ước bên dưới nhé!";
       reqGiftDropdown.append(emptyNote);
+      btnToggleGifts.textContent = "🎁 Chọn quà đổi (chưa có quà đã mở) ▼";
     } else {
+      // Thanh tiêu đề & đếm số lượng chọn
+      const headerRow = document.createElement("div");
+      headerRow.className = "req-dropdown-header";
+
+      const headerTitle = document.createElement("span");
+      headerTitle.textContent = "✨ Chọn tối đa 3 món quà bạn muốn đổi:";
+
+      const headerBadge = document.createElement("span");
+      headerBadge.className = "req-count-badge";
+      headerBadge.id = "req-count-badge";
+      headerBadge.textContent = `Đã chọn: ${selected.length}/3`;
+
+      headerRow.append(headerTitle, headerBadge);
+      reqGiftDropdown.append(headerRow);
+
+      // Cập nhật text nút toggle
+      const updateButtonLabel = (isExpanded) => {
+        const arrow = isExpanded ? "▲" : "▼";
+        if (selected.length > 0) {
+          btnToggleGifts.textContent = `🎁 Đã chọn ${selected.length}/3 món đổi (bấm để xem) ${arrow}`;
+        } else {
+          btnToggleGifts.textContent = `🎁 Chọn quà đổi (chọn tối đa 3 trong 6 món) ${arrow}`;
+        }
+      };
+      updateButtonLabel(!reqGiftDropdown.classList.contains("hidden"));
+
+      // Tạo các lựa chọn cho 6 hộp quà đã mở
       opened.forEach((g) => {
+        const isSelected = selected.some((s) => s.title === g.title);
         const itemBtn = document.createElement("button");
         itemBtn.type = "button";
-        itemBtn.className = "req-gift-option" + (g.isBanhMi ? " banhmi" : "");
+        itemBtn.className = "req-gift-option"
+          + (g.isBanhMi ? " banhmi" : "")
+          + (isSelected ? " selected" : "");
+
+        const leftBox = document.createElement("div");
+        leftBox.className = "req-gift-left";
+
+        const chk = document.createElement("span");
+        chk.className = "req-checkbox";
+        chk.textContent = isSelected ? "✓" : "";
 
         const textSpan = document.createElement("span");
         textSpan.textContent = `Hộp ${g.box}: ${g.icon} ${g.title}`;
 
+        leftBox.append(chk, textSpan);
+
         const tagSpan = document.createElement("span");
         tagSpan.className = "req-gift-option-tag";
-        tagSpan.textContent = g.isBanhMi ? "🥖 Trúng Bánh Mì" : "Đổi phiếu này";
+        if (g.isBanhMi) {
+          tagSpan.textContent = isSelected ? "✓ Đã chọn Bánh mì" : "🥖 Bánh mì (10–20k)";
+        } else {
+          tagSpan.textContent = isSelected ? "✓ Đã chọn" : "+ Chọn đổi";
+        }
 
-        itemBtn.append(textSpan, tagSpan);
+        itemBtn.append(leftBox, tagSpan);
 
         itemBtn.addEventListener("click", () => {
-          if (g.isBanhMi) {
-            reqMsg.value = `🥖 Mình mở trúng Bánh mì (trị giá 10–20k) rồi, ${AUTHOR_NAME} tặng mình nha!`;
+          const curIndex = selected.findIndex((s) => s.title === g.title);
+          if (curIndex >= 0) {
+            // Bỏ chọn
+            selected.splice(curIndex, 1);
           } else {
-            reqMsg.value = `🎁 Cho mình đổi phiếu "${g.title}" nha ${AUTHOR_NAME}!`;
+            // Chọn thêm: tối đa 3 món
+            if (selected.length >= 3) {
+              toast("Bạn đã chọn đủ 3 món rồi nhé! Hãy bỏ chọn món khác nếu muốn đổi món này 🎁");
+              return;
+            }
+            selected.push(g);
+            fx.puff(itemBtn.getBoundingClientRect().left + 80, itemBtn.getBoundingClientRect().top, 10);
           }
-          btnToggleGifts.textContent = `🎁 Đã chọn: ${g.title} (bấm để đổi) ▲`;
-          reqGiftDropdown.classList.add("hidden");
-          reqMsg.focus();
-          fx.puff(itemBtn.getBoundingClientRect().left + 80, itemBtn.getBoundingClientRect().top, 10);
+
+          viewer.saveSelectedGifts(selected);
+
+          // Tự động điền nội dung lời nhắn theo các món đã chọn
+          if (selected.length > 0) {
+            const giftNames = selected.map((s) => (s.isBanhMi ? "🥖 Bánh mì (trị giá 10–20k)" : `${s.icon} ${s.title}`)).join(", ");
+            reqMsg.value = `Cho mình đổi ${selected.length} món quà: ${giftNames} nha ${AUTHOR_NAME}! 💗`;
+          } else {
+            reqMsg.value = "";
+          }
+          updateCharCount();
+
+          renderGiftSelector();
         });
 
         reqGiftDropdown.append(itemBtn);
       });
 
+      // Nếu có gieo quẻ
       if (viewer.fortune) {
         const itemBtn = document.createElement("button");
         itemBtn.type = "button";
         itemBtn.className = "req-gift-option";
-        itemBtn.innerHTML = `<span>🎋 Quẻ đã gieo: ${viewer.fortune}</span><span class="req-gift-option-tag">Gửi quẻ này</span>`;
+        itemBtn.innerHTML = `<div class="req-gift-left"><span class="req-checkbox">🎋</span><span>Quẻ đã gieo: ${viewer.fortune}</span></div><span class="req-gift-option-tag">Gửi quẻ này</span>`;
         itemBtn.addEventListener("click", () => {
           reqMsg.value = `🎋 Mình gieo được ${viewer.fortune} nè ${AUTHOR_NAME}!`;
-          btnToggleGifts.textContent = `🎋 Đã chọn gửi Quẻ xăm (bấm để đổi) ▲`;
+          updateCharCount();
           reqGiftDropdown.classList.add("hidden");
           reqMsg.focus();
         });
@@ -146,11 +219,11 @@ export default function createFinale(app) {
       }
     }
 
-    // Các nút gợi ý nhanh ở dưới
+    // Các nút gợi ý nhanh ở dưới (không lặp lại các chip tĩnh)
     reqChips.replaceChildren();
     const list = [...QUICK_REQUESTS];
     if (wonBanhMi) {
-      list.unshift(`🥖 Mình mở trúng Bánh mì (trị giá 10–20k) rồi, ${AUTHOR_NAME} tặng mình nha!`);
+      list.unshift(`🥖 Mình đổi bánh mì nóng giòn (trị giá 10–20k) nha ${AUTHOR_NAME}!`);
     }
 
     list.forEach((txt) => {
@@ -160,6 +233,7 @@ export default function createFinale(app) {
       btn.textContent = txt;
       btn.addEventListener("click", () => {
         reqMsg.value = txt;
+        updateCharCount();
         reqMsg.focus();
       });
       reqChips.append(btn);
@@ -168,11 +242,12 @@ export default function createFinale(app) {
 
   btnToggleGifts.addEventListener("click", () => {
     const isHidden = reqGiftDropdown.classList.toggle("hidden");
-    const opened = viewer.openedList();
-    if (isHidden) {
-      btnToggleGifts.textContent = opened.length ? "🎁 Đổi phiếu quà đã mở... ▼" : "🎁 Xem phiếu quà... ▼";
+    const selected = viewer.getSelectedGifts();
+    const arrow = isHidden ? "▼" : "▲";
+    if (selected.length > 0) {
+      btnToggleGifts.textContent = `🎁 Đã chọn ${selected.length}/3 món đổi (bấm để xem) ${arrow}`;
     } else {
-      btnToggleGifts.textContent = "🎁 Chọn phiếu bạn muốn đổi bên dưới: ▲";
+      btnToggleGifts.textContent = `🎁 Chọn quà đổi (chọn tối đa 3 trong 6 món) ${arrow}`;
     }
   });
 
@@ -229,14 +304,51 @@ export default function createFinale(app) {
       top.append(sender, time);
       card.append(top);
 
-      // Nhãn xác thực trúng Bánh mì 10-20k từ hệ thống
-      const verifyBadge = document.createElement("div");
-      verifyBadge.className = "inbox-banhmi-status " + (item.wonBanhMi ? "won" : "not-won");
-      verifyBadge.textContent = item.wonBanhMi
-        ? "✅ HỆ THỐNG XÁC NHẬN: ĐÃ MỞ TRÚNG BÁNH MÌ (10–20K)"
-        : "❌ HỆ THỐNG XÁC NHẬN: Chưa mở trúng Bánh mì";
-      card.append(verifyBadge);
+      // Xác thực Bánh mì thông minh
+      const hasBanhMiClaim = (item.msg || "").toLowerCase().includes("bánh mì") || (item.msg || "").toLowerCase().includes("banh mi");
+      const isSelectedBanhMi = Boolean(item.selectedBanhMi || (item.selectedGifts && item.selectedGifts.some((x) => String(x).includes("Bánh mì"))));
 
+      if (isSelectedBanhMi) {
+        const verifyBadge = document.createElement("div");
+        verifyBadge.className = "inbox-banhmi-status won";
+        verifyBadge.textContent = "✅ HỆ THỐNG XÁC NHẬN: BẠN NÀY ĐÃ CHỌN ĐỔI BÁNH MÌ (TRÚNG THẬT 100%)";
+        card.append(verifyBadge);
+      } else if (item.wonBanhMi) {
+        const verifyBadge = document.createElement("div");
+        verifyBadge.className = "inbox-banhmi-status won-not-chosen";
+        verifyBadge.textContent = "🥖 Có mở trúng Bánh mì (nhưng chọn đổi món quà khác)";
+        card.append(verifyBadge);
+      } else if (hasBanhMiClaim) {
+        const verifyBadge = document.createElement("div");
+        verifyBadge.className = "inbox-banhmi-status not-won";
+        verifyBadge.textContent = "❌ HỆ THỐNG XÁC NHẬN: Chưa mở trúng Bánh mì (nhắn đòi thủ công)";
+        card.append(verifyBadge);
+      }
+
+      // Phần quà người dùng đã chọn đổi (tối đa 3 món)
+      const selArr = Array.isArray(item.selectedGifts) ? item.selectedGifts : [];
+      if (selArr.length > 0) {
+        const selSec = document.createElement("div");
+        selSec.className = "inbox-selected-section";
+
+        const selTitle = document.createElement("span");
+        selTitle.className = "inbox-selected-title";
+        selTitle.textContent = `🎁 Quà bạn ấy chọn đổi (${selArr.length}/3 món):`;
+
+        const selList = document.createElement("div");
+        selList.className = "inbox-selected-list";
+        selArr.forEach((gName) => {
+          const itemTag = document.createElement("span");
+          itemTag.className = "inbox-selected-item";
+          itemTag.textContent = gName;
+          selList.append(itemTag);
+        });
+
+        selSec.append(selTitle, selList);
+        card.append(selSec);
+      }
+
+      // Toàn bộ quà đã mở ở Cảnh 5
       const giftsArr = Array.isArray(item.openedGifts) ? item.openedGifts : (item.coupon ? [item.coupon] : []);
       if (giftsArr.length || item.fortune) {
         const perks = document.createElement("div");
@@ -270,9 +382,11 @@ export default function createFinale(app) {
     messagesMap.set(id, {
       id,
       name: String(data.name || "Bạn nữ").slice(0, 30),
-      msg: String(data.msg || "").slice(0, 300),
+      msg: String(data.msg || "").slice(0, 500),
       wonBanhMi: Boolean(data.wonBanhMi),
+      selectedBanhMi: Boolean(data.selectedBanhMi),
       banhMiStatus: String(data.banhMiStatus || ""),
+      selectedGifts: Array.isArray(data.selectedGifts) ? data.selectedGifts.map((x) => String(x).slice(0, 80)) : [],
       openedGifts: Array.isArray(data.openedGifts) ? data.openedGifts.map((x) => String(x).slice(0, 80)) : [],
       fortune: String(data.fortune || "").slice(0, 80),
       ts: data.ts || Date.now(),
@@ -313,7 +427,7 @@ export default function createFinale(app) {
   reqForm.addEventListener("submit", async (e) => {
     e.preventDefault();
     const senderName = (reqName.value.trim() || viewer.display()).slice(0, 30);
-    const messageText = reqMsg.value.trim().slice(0, 300);
+    const messageText = reqMsg.value.trim().slice(0, 500);
     if (!messageText) return;
 
     viewer.name = senderName;
@@ -323,17 +437,22 @@ export default function createFinale(app) {
     btnSendReq.textContent = `Đang gửi tới ${AUTHOR_NAME}…`;
 
     const opened = viewer.openedList();
+    const selected = viewer.getSelectedGifts();
     const wonBanhMi = viewer.hasBanhMi();
+    const selectedBanhMi = selected.some((s) => s.isBanhMi || (s.title && s.title.includes("Bánh mì")));
     const openedGiftsText = opened.map((g) => `Hộp ${g.box}: ${g.icon} ${g.title}`);
+    const selectedGiftsText = selected.map((s) => (s.isBanhMi ? "🥖 Bánh mì (trị giá 10–20k)" : `${s.icon} ${s.title}`));
 
     const item = {
       id: "req-" + Date.now() + "-" + Math.random().toString(36).slice(2, 7),
       name: senderName,
       msg: messageText,
+      selectedGifts: selectedGiftsText,
+      selectedBanhMi,
       wonBanhMi,
-      banhMiStatus: wonBanhMi
-        ? "ĐÃ MỞ TRÚNG BÁNH MÌ (10-20K)"
-        : "KHÔNG TRÚNG BÁNH MÌ",
+      banhMiStatus: selectedBanhMi
+        ? "ĐÃ CHỌN ĐỔI BÁNH MÌ (TRÚNG THẬT 100%)"
+        : (wonBanhMi ? "CÓ TRÚNG BÁNH MÌ (KHÔNG CHỌN)" : "KHÔNG TRÚNG BÁNH MÌ"),
       openedGifts: openedGiftsText,
       fortune: viewer.fortune || "",
       ts: Date.now(),
@@ -380,6 +499,7 @@ export default function createFinale(app) {
 
   btnReqAgain.addEventListener("click", () => {
     reqMsg.value = "";
+    updateCharCount();
     reqSent.classList.add("hidden");
     reqForm.classList.remove("hidden");
     reqMsg.focus();
