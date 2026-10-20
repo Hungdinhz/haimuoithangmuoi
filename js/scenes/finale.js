@@ -1,12 +1,17 @@
-// Cảnh 7: Lời cảm ơn + Lời chúc riêng cho bạn nữ + Gửi lời nhắn tới HungDinh + API Hộp thư bí mật cho riêng HungDinh.
+// Cảnh 7: Lời cảm ơn + Lời chúc riêng cho bạn nữ + Gửi lời nhắn tới HungDinh + API & Hộp thư lưu trữ vĩnh viễn cho riêng HungDinh.
 import { $, fillName, viewer, toast } from "../utils.js";
 import { FINALE_WISHES, QUICK_REQUESTS, AUTHOR_NAME } from "../data.js";
 import { fx } from "../fx/particles.js";
 
-// Kênh API riêng chỉ mình HungDinh biết để xem danh sách gửi về
+// Kênh lưu trữ đám mây vĩnh viễn (lưu ngày mai, tuần sau mở lại vẫn còn nguyên)
+const PERMANENT_OBJ_ID = "ff808181a09d98f701a157c9127e25c9";
+const PERMANENT_URL = `https://api.restful-api.dev/objects/${PERMANENT_OBJ_ID}`;
+
+// Kênh pub/sub thời gian thực
 const SECRET_API_TOPIC = "hungdinh_2010_api_private_99";
-const CLOUD_URL = `https://ntfy.sh/${SECRET_API_TOPIC}`;
-const STORAGE_KEY = "kvcn-hungdinh-inbox-v2";
+const REALTIME_URL = `https://ntfy.sh/${SECRET_API_TOPIC}`;
+
+const STORAGE_KEY = "kvcn-hungdinh-inbox-v3";
 
 function loadLocalInbox() {
   try {
@@ -19,7 +24,7 @@ function loadLocalInbox() {
 
 function saveLocalInbox(items) {
   try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(items.slice(0, 100)));
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(items.slice(0, 150)));
   } catch { /* ignore */ }
 }
 
@@ -41,7 +46,8 @@ export default function createFinale(app) {
   const btnNextWish = $("#btn-next-wish");
   const reqForm = $("#request-form");
   const reqName = $("#req-name");
-  const reqPerks = $("#req-perks");
+  const btnToggleGifts = $("#btn-toggle-gifts");
+  const reqGiftDropdown = $("#req-gift-dropdown");
   const reqChips = $("#req-chips");
   const reqMsg = $("#req-msg");
   const btnSendReq = $("#btn-send-req");
@@ -82,46 +88,69 @@ export default function createFinale(app) {
     fx.puff(r.left + r.width / 2, r.top, 12);
   });
 
-  // ---------- 2. Hiển thị quà đã mở & xác thực Bánh mì 10-20k ----------
-  function renderPerksAndChips() {
-    reqPerks.replaceChildren();
+  // ---------- 2. Dòng chọn đổi phiếu quà đã mở (chỉ hiện chi tiết khi bấm vào) ----------
+  function renderGiftSelector() {
     const opened = viewer.openedList();
     const wonBanhMi = viewer.hasBanhMi();
+    reqGiftDropdown.replaceChildren();
 
-    if (opened.length || viewer.fortune) {
-      reqPerks.classList.remove("hidden");
-
-      if (wonBanhMi) {
-        const banner = document.createElement("div");
-        banner.className = "banhmi-alert";
-        banner.textContent = "🎉 ĐÃ MỞ TRÚNG: 🥖 Bánh mì (trị giá 10–20k)! Hệ thống sẽ tự động đính kèm xác nhận trúng bánh mì khi bạn gửi cho HungDinh.";
-        reqPerks.append(banner);
-      }
-
+    if (!opened.length && !viewer.fortune) {
+      const emptyNote = document.createElement("div");
+      emptyNote.style.padding = "8px";
+      emptyNote.style.fontSize = ".82rem";
+      emptyNote.style.opacity = ".8";
+      emptyNote.textContent = "Bạn chưa mở hộp quà nào ở cảnh trước. Bạn có thể tự viết lời nhắn / điều ước bên dưới nhé!";
+      reqGiftDropdown.append(emptyNote);
+    } else {
       opened.forEach((g) => {
-        const span = document.createElement("span");
-        span.className = "req-perk-tag" + (g.isBanhMi ? " highlight" : "");
-        span.textContent = `Hộp ${g.box}: ${g.icon} ${g.title}`;
-        reqPerks.append(span);
+        const itemBtn = document.createElement("button");
+        itemBtn.type = "button";
+        itemBtn.className = "req-gift-option" + (g.isBanhMi ? " banhmi" : "");
+
+        const textSpan = document.createElement("span");
+        textSpan.textContent = `Hộp ${g.box}: ${g.icon} ${g.title}`;
+
+        const tagSpan = document.createElement("span");
+        tagSpan.className = "req-gift-option-tag";
+        tagSpan.textContent = g.isBanhMi ? "🥖 Trúng Bánh Mì" : "Đổi phiếu này";
+
+        itemBtn.append(textSpan, tagSpan);
+
+        itemBtn.addEventListener("click", () => {
+          if (g.isBanhMi) {
+            reqMsg.value = `🥖 Mình mở trúng Bánh mì (trị giá 10–20k) rồi, ${AUTHOR_NAME} tặng mình nha!`;
+          } else {
+            reqMsg.value = `🎁 Cho mình đổi phiếu "${g.title}" nha ${AUTHOR_NAME}!`;
+          }
+          btnToggleGifts.textContent = `🎁 Đã chọn: ${g.title} (bấm để đổi) ▲`;
+          reqGiftDropdown.classList.add("hidden");
+          reqMsg.focus();
+          fx.puff(itemBtn.getBoundingClientRect().left + 80, itemBtn.getBoundingClientRect().top, 10);
+        });
+
+        reqGiftDropdown.append(itemBtn);
       });
 
       if (viewer.fortune) {
-        const span = document.createElement("span");
-        span.className = "req-perk-tag";
-        span.textContent = `🎋 ${viewer.fortune}`;
-        reqPerks.append(span);
+        const itemBtn = document.createElement("button");
+        itemBtn.type = "button";
+        itemBtn.className = "req-gift-option";
+        itemBtn.innerHTML = `<span>🎋 Quẻ đã gieo: ${viewer.fortune}</span><span class="req-gift-option-tag">Gửi quẻ này</span>`;
+        itemBtn.addEventListener("click", () => {
+          reqMsg.value = `🎋 Mình gieo được ${viewer.fortune} nè ${AUTHOR_NAME}!`;
+          btnToggleGifts.textContent = `🎋 Đã chọn gửi Quẻ xăm (bấm để đổi) ▲`;
+          reqGiftDropdown.classList.add("hidden");
+          reqMsg.focus();
+        });
+        reqGiftDropdown.append(itemBtn);
       }
-    } else {
-      reqPerks.classList.add("hidden");
     }
 
+    // Các nút gợi ý nhanh ở dưới
     reqChips.replaceChildren();
     const list = [...QUICK_REQUESTS];
     if (wonBanhMi) {
       list.unshift(`🥖 Mình mở trúng Bánh mì (trị giá 10–20k) rồi, ${AUTHOR_NAME} tặng mình nha!`);
-    } else if (opened.length) {
-      const firstGift = `${opened[0].icon} ${opened[0].title}`;
-      list[0] = `🎁 Cho mình đổi phiếu "${firstGift}" nha ${AUTHOR_NAME}!`;
     }
 
     list.forEach((txt) => {
@@ -137,6 +166,16 @@ export default function createFinale(app) {
     });
   }
 
+  btnToggleGifts.addEventListener("click", () => {
+    const isHidden = reqGiftDropdown.classList.toggle("hidden");
+    const opened = viewer.openedList();
+    if (isHidden) {
+      btnToggleGifts.textContent = opened.length ? "🎁 Đổi phiếu quà đã mở... ▼" : "🎁 Xem phiếu quà... ▼";
+    } else {
+      btnToggleGifts.textContent = "🎁 Chọn phiếu bạn muốn đổi bên dưới: ▲";
+    }
+  });
+
   reqName.addEventListener("input", () => {
     const v = reqName.value.trim().slice(0, 30);
     if (v) {
@@ -146,7 +185,7 @@ export default function createFinale(app) {
     }
   });
 
-  // ---------- 3. Quản lý API & Hộp thư bí mật của HungDinh ----------
+  // ---------- 3. Quản lý Hộp thư & Đám mây vĩnh viễn của HungDinh ----------
   const messagesMap = new Map();
   loadLocalInbox().forEach((item) => {
     if (item && item.id) messagesMap.set(item.id, item);
@@ -167,7 +206,7 @@ export default function createFinale(app) {
     if (!all.length) {
       const empty = document.createElement("div");
       empty.className = "inbox-empty";
-      empty.textContent = "Chưa có tin nhắn nào gửi tới HungDinh.";
+      empty.textContent = "Chưa có tin nhắn nào gửi tới HungDinh. Dữ liệu được lưu trữ vĩnh viễn trên đám mây.";
       inboxList.append(empty);
       return;
     }
@@ -224,42 +263,53 @@ export default function createFinale(app) {
     });
   }
 
-  function ingestCloudLine(line, notify = false) {
-    try {
-      const env = JSON.parse(line);
-      if (env.event !== "message" || !env.message) return;
-      const data = JSON.parse(env.message);
-      if (!data || typeof data !== "object" || !data.msg) return;
-      const id = data.id || env.id;
-      const isNew = !messagesMap.has(id);
-      messagesMap.set(id, {
-        id,
-        name: String(data.name || "Bạn nữ").slice(0, 30),
-        msg: String(data.msg || "").slice(0, 300),
-        wonBanhMi: Boolean(data.wonBanhMi),
-        banhMiStatus: String(data.banhMiStatus || ""),
-        openedGifts: Array.isArray(data.openedGifts) ? data.openedGifts.map((x) => String(x).slice(0, 80)) : [],
-        fortune: String(data.fortune || "").slice(0, 80),
-        ts: data.ts || (env.time ? env.time * 1000 : Date.now()),
-      });
-      if (isNew) {
-        renderInbox();
-        if (notify && isAdmin) toast(`📬 Tin nhắn mới từ ${data.name || "bạn nữ"}!`);
-      }
-    } catch { /* ignore invalid line */ }
-  }
-
-  async function fetchCloudInbox() {
-    try {
-      const res = await fetch(`${CLOUD_URL}/json?poll=1&since=24h`);
-      if (!res.ok) return;
-      const text = await res.text();
-      text.split("\n").filter(Boolean).forEach((line) => ingestCloudLine(line, false));
+  function ingestItem(data, notify = false) {
+    if (!data || typeof data !== "object" || !data.msg) return;
+    const id = data.id || "item-" + data.ts;
+    const isNew = !messagesMap.has(id);
+    messagesMap.set(id, {
+      id,
+      name: String(data.name || "Bạn nữ").slice(0, 30),
+      msg: String(data.msg || "").slice(0, 300),
+      wonBanhMi: Boolean(data.wonBanhMi),
+      banhMiStatus: String(data.banhMiStatus || ""),
+      openedGifts: Array.isArray(data.openedGifts) ? data.openedGifts.map((x) => String(x).slice(0, 80)) : [],
+      fortune: String(data.fortune || "").slice(0, 80),
+      ts: data.ts || Date.now(),
+    });
+    if (isNew) {
       renderInbox();
-    } catch { /* offline fallback uses localStorage */ }
+      if (notify && isAdmin) toast(`📬 Tin nhắn mới từ ${data.name || "bạn nữ"}!`);
+    }
   }
 
-  // Gửi lời nhắn từ bạn nữ tới HungDinh
+  async function fetchPermanentInbox() {
+    try {
+      const res = await fetch(PERMANENT_URL);
+      if (res.ok) {
+        const obj = await res.json();
+        const list = obj?.data?.messages || [];
+        list.forEach((m) => ingestItem(m, false));
+        renderInbox();
+      }
+    } catch { /* fallback to local and pubsub */ }
+
+    try {
+      const res2 = await fetch(`${REALTIME_URL}/json?poll=1&since=24h`);
+      if (res2.ok) {
+        const text = await res2.text();
+        text.split("\n").filter(Boolean).forEach((line) => {
+          try {
+            const env = JSON.parse(line);
+            if (env.event === "message" && env.message) ingestItem(JSON.parse(env.message), false);
+          } catch {}
+        });
+        renderInbox();
+      }
+    } catch {}
+  }
+
+  // Gửi lời nhắn từ bạn nữ tới HungDinh (Lưu vĩnh viễn lên Cloud + Realtime)
   reqForm.addEventListener("submit", async (e) => {
     e.preventDefault();
     const senderName = (reqName.value.trim() || viewer.display()).slice(0, 30);
@@ -292,12 +342,32 @@ export default function createFinale(app) {
     messagesMap.set(item.id, item);
     renderInbox();
 
+    // 1. Lưu vĩnh viễn lên Đám mây (Persistent Cloud Database)
     try {
-      await fetch(CLOUD_URL, {
+      const getRes = await fetch(PERMANENT_URL);
+      let curList = [];
+      if (getRes.ok) {
+        const curObj = await getRes.json();
+        curList = curObj?.data?.messages || [];
+      }
+      curList.unshift(item);
+      await fetch(PERMANENT_URL, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: "HungDinh 2010 Permanent Inbox",
+          data: { messages: curList.slice(0, 100) },
+        }),
+      });
+    } catch { /* đã lưu local */ }
+
+    // 2. Bắn tin tức thời qua realtime
+    try {
+      await fetch(REALTIME_URL, {
         method: "POST",
         body: JSON.stringify(item),
       });
-    } catch { /* đã lưu local */ }
+    } catch {}
 
     btnSendReq.disabled = false;
     btnSendReq.textContent = `🚀 Gửi cho ${AUTHOR_NAME}`;
@@ -321,11 +391,16 @@ export default function createFinale(app) {
     enableAdminMode();
     inboxModal.classList.remove("hidden");
     renderInbox();
-    fetchCloudInbox();
+    fetchPermanentInbox();
     if (!es) {
       try {
-        es = new EventSource(`${CLOUD_URL}/sse`);
-        es.addEventListener("message", (ev) => ingestCloudLine(ev.data, true));
+        es = new EventSource(`${REALTIME_URL}/sse`);
+        es.addEventListener("message", (ev) => {
+          try {
+            const env = JSON.parse(ev.data);
+            if (env.message) ingestItem(JSON.parse(env.message), true);
+          } catch {}
+        });
       } catch { /* ignore */ }
     }
   }
@@ -341,7 +416,7 @@ export default function createFinale(app) {
   $("#btn-inbox-close").addEventListener("click", closeInbox);
   $("#btn-inbox-refresh").addEventListener("click", () => {
     toast("🔄 Đang cập nhật hộp thư…");
-    fetchCloudInbox();
+    fetchPermanentInbox();
   });
   inboxModal.addEventListener("click", (e) => {
     if (e.target === inboxModal) closeInbox();
@@ -368,7 +443,7 @@ export default function createFinale(app) {
     enter() {
       reqName.value = viewer.name || "";
       renderSpecialWish(false);
-      renderPerksAndChips();
+      renderGiftSelector();
 
       fx.petals(0.15);
       let n = 0;

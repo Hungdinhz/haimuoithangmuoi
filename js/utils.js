@@ -105,7 +105,7 @@ export const viewer = {
 
   getOpenedMap() {
     try {
-      const raw = localStorage.getItem("kvcn-gifts-v2");
+      const raw = localStorage.getItem("kvcn-gifts-v3");
       return raw ? JSON.parse(raw) : this._memGifts;
     } catch {
       return this._memGifts;
@@ -113,15 +113,15 @@ export const viewer = {
   },
   saveOpenedGift(boxIdx, gift) {
     const map = this.getOpenedMap();
-    if (Object.keys(map).length >= 3 && !map[boxIdx]) return map[boxIdx] || null;
+    if (Object.keys(map).length >= 2 && !map[boxIdx]) return map[boxIdx] || null;
     map[boxIdx] = gift;
     this._memGifts = map;
-    try { localStorage.setItem("kvcn-gifts-v2", JSON.stringify(map)); } catch {}
+    try { localStorage.setItem("kvcn-gifts-v3", JSON.stringify(map)); } catch {}
     return gift;
   },
   openedList() {
     const map = this.getOpenedMap();
-    return [0, 1, 2]
+    return [0, 1, 2, 3, 4, 5]
       .filter((k) => map[k])
       .map((k) => ({ box: Number(k) + 1, ...map[k] }));
   },

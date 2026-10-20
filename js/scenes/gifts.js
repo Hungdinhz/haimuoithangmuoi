@@ -1,5 +1,5 @@
-// Cảnh 5: Hộp quà bí ẩn – mở ra phiếu đặc quyền, tải về thành ảnh PNG.
-import { $, $$, pick, viewer, downloadCanvas } from "../utils.js";
+// Cảnh 5: Hộp quà bí ẩn – 6 hộp quà, chọn mở 2/6 hộp, tải về thành ảnh PNG.
+import { $, $$, pick, viewer, downloadCanvas, toast } from "../utils.js";
 import { COUPONS } from "../data.js";
 import { fx } from "../fx/particles.js";
 
@@ -93,10 +93,10 @@ export default function createGifts(app) {
       g.classList.toggle("opened", Boolean(item));
     });
 
-    const remain = Math.max(0, 3 - openedCount);
+    const remain = Math.max(0, 2 - openedCount);
     btnRegift.textContent = remain > 0
-      ? `🎁 Mở tiếp hộp còn lại (còn ${remain} hộp)`
-      : "Đóng (Đã mở đủ 3/3 hộp)";
+      ? `🎁 Mở tiếp 1 hộp nữa (còn ${remain} hộp)`
+      : "Đóng (Đã mở đủ 2/6 hộp)";
   }
 
   function showCoupon(c) {
@@ -120,8 +120,11 @@ export default function createGifts(app) {
         return;
       }
 
-      // Nếu đã mở đủ 3 hộp thì không mở thêm được nữa
-      if (Object.keys(map).length >= 3) return;
+      // Nếu đã mở đủ 2 hộp thì không mở thêm được nữa
+      if (Object.keys(map).length >= 2) {
+        toast("Bạn đã mở đủ 2/6 hộp quà rồi nhé! 🎁");
+        return;
+      }
 
       busy = true;
       g.classList.add("opened");

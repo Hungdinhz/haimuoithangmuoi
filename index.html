@@ -126,13 +126,16 @@
     <section class="scene" id="scene-gifts" data-title="Hộp quà">
       <div class="scene-head">
         <h2>Hộp quà bí ẩn</h2>
-        <p>Có 3 hộp quà dành tặng bạn, mỗi hộp chỉ mở được 1 lần (tối đa 3 hộp) 🎁</p>
-        <div class="counter">Đã mở: <span id="gift-count">0</span>/3 hộp</div>
+        <p>Có 6 hộp quà bí ẩn dành tặng bạn, bạn được chọn mở bất kỳ 2/6 hộp nhé 🎁</p>
+        <div class="counter">Đã mở: <span id="gift-count">0</span>/2 hộp</div>
       </div>
       <div class="gifts" id="gifts">
         <button class="gift g1" data-gift="0" aria-label="Hộp quà 1"><span class="lid"></span><span class="box"></span></button>
         <button class="gift g2" data-gift="1" aria-label="Hộp quà 2"><span class="lid"></span><span class="box"></span></button>
         <button class="gift g3" data-gift="2" aria-label="Hộp quà 3"><span class="lid"></span><span class="box"></span></button>
+        <button class="gift g4" data-gift="3" aria-label="Hộp quà 4"><span class="lid"></span><span class="box"></span></button>
+        <button class="gift g5" data-gift="4" aria-label="Hộp quà 5"><span class="lid"></span><span class="box"></span></button>
+        <button class="gift g6" data-gift="5" aria-label="Hộp quà 6"><span class="lid"></span><span class="box"></span></button>
       </div>
       <div class="coupon hidden" id="coupon">
         <div class="coupon-inner">
@@ -195,7 +198,12 @@
               <span>👤 Tên bạn dùng:</span>
               <input id="req-name" maxlength="30" required placeholder="Nhập tên của bạn…" />
             </div>
-            <div class="req-perks hidden" id="req-perks"></div>
+            <div class="req-gift-toggle-wrap" id="req-gift-toggle-wrap">
+              <button type="button" class="btn-toggle-gifts" id="btn-toggle-gifts">
+                🎁 Đổi phiếu quà đã mở... ▼
+              </button>
+              <div class="req-gift-dropdown hidden" id="req-gift-dropdown"></div>
+            </div>
             <div class="req-chips" id="req-chips"></div>
             <textarea id="req-msg" maxlength="300" rows="3" required placeholder="Nhập điều ước hoặc lời nhắn gửi tới HungDinh…"></textarea>
             <button class="btn primary" type="submit" id="btn-send-req">🚀 Gửi cho HungDinh</button>
@@ -261,7 +269,7 @@
       <div class="inbox-head">
         <div>
           <h3 id="inbox-title">📬 Hộp thư riêng của HungDinh</h3>
-          <p class="inbox-sub">Chỉ mình HungDinh xem được · Kiểm tra tên, 3 hộp quà đã mở & xác thực trúng Bánh mì</p>
+          <p class="inbox-sub">Chỉ mình HungDinh xem được · Kiểm tra tên, các hộp quà đã mở & xác thực trúng Bánh mì</p>
         </div>
         <div class="inbox-head-actions">
           <button type="button" class="btn ghost small" id="btn-inbox-refresh" title="Làm mới">🔄</button>
